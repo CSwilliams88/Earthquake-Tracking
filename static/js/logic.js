@@ -1,7 +1,7 @@
 // Creating map object
-var myMap = L.map("map", {
+var myMap = L.map("mapid", {
     center: [37.7749, -122.4194],
-    zoom: 13
+    zoom: 5
   });
   
   // Adding tile layer
@@ -16,25 +16,38 @@ var myMap = L.map("map", {
 
 // Use this link to get the geojson data.
 var link = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
-
-d3.json(url, function(response) {
-
-    console.log(response);
-  
-    var heatArray = [];
-  
-    for (var i = 0; i < response.length; i++) {
-      var location = response[i].location;
-  
-      if (location) {
-        heatArray.push([location.coordinates[1], location.coordinates[0]]);
-      }
-    }
-  
-    var heat = L.heatLayer(heatArray, {
-      radius: 20,
-      blur: 35
-    }).addTo(myMap);
-  
-  });
-  
+function chooseColor(Quake) {
+  switch (true) {
+  case Quake > 90:
+    return "#BD0026";
+  case Quake > 70:
+    return "#FC4E2A";
+  case Quake > 50:
+    return "#FD8D3C";
+  case Quake > 30:
+    return "#FEB24C";
+  case Quake > 10:
+    return "#FED976";
+  default:
+    return "#FFEDA0";
+  }
+}
+d3.json(link, function(data) {
+  // Creating a geoJSON layer with the retrieved data
+  L.geoJson(data, {
+    onEachFeature: function(feature, layer) {
+      layer.bindPopup("<h1>" + feature.properties.mag + "</h1> <hr> <h2>" + feature.properties.place + "</h2>");
+    
+    },
+    pointToLayer: function (feature, latlng) {
+      return L.circleMarker(latlng,{
+        radius: feature.properties.mag * 3,
+        fillColor: chooseColor(feature.geometry.coordinates[2]),
+        color: "#000",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+    } );
+  }
+  }).addTo(myMap);
+}); 
